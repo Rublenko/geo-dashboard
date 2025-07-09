@@ -8,7 +8,12 @@
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     #address { font-size: 1.2em; margin-bottom: 10px; }
-    #viz1752060474290 { width: 100%; height: 800px; }
+    #viz1752060474290 {
+      width: 1240px;
+      height: 800px;
+      margin: auto;
+      border: 1px solid #ccc;
+    }
   </style>
 </head>
 <body>
@@ -48,22 +53,22 @@
     function updateAddressAndInitViz(lat, lon) {
       $("#address").text(`Ваші координати: широта ${lat.toFixed(4)}, довгота ${lon.toFixed(4)}`);
 
-      // Ініціалізація візуалізації
       const container = document.getElementById('viz1752060474290');
       const vizObject = container.getElementsByTagName('object')[0];
       vizObject.style.display = 'block';
-      vizElement.style.width='1240px';vizElement.style.height='700px';   
+      vizObject.style.width = '1240px';
+      vizObject.style.height = '800px';
 
-      // Завантаження Tableau візуалізації
       const script = document.createElement('script');
       script.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';
       vizObject.parentNode.insertBefore(script, vizObject);
 
-      // Після завантаження API, встановлюємо параметри
       script.onload = function () {
         const viz = new tableau.Viz(container, "https://public.tableau.com/views/location_map_17520603297910/mp_lvl_1-13", {
           hideTabs: true,
           hideToolbar: false,
+          width: "1240px",
+          height: "800px",
           onFirstInteractive: function () {
             viz.getWorkbook().changeParameterValueAsync("Latitude", lat.toString());
             viz.getWorkbook().changeParameterValueAsync("Longitude", lon.toString());
