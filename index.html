@@ -8,7 +8,7 @@
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     #address { font-size: 1.2em; margin-bottom: 10px; }
-    #vizContainer { width: 100%; height: 800px; border: 1px solid #ccc; }
+    #viz1752060474290 { width: 100%; height: 800px; }
   </style>
 </head>
 <body>
@@ -17,44 +17,76 @@
 <div id="address">Визначення місцезнаходження...</div>
 <hr/>
 
-<div id="vizContainer"></div>
+<!-- Tableau контейнер -->
+<div class='tableauPlaceholder' id='viz1752060474290' style='position: relative'>
+  <noscript>
+    <a href='#'>
+      <img alt='mp_lvl_1-1 (3)'
+           src='https://public.tableau.com/static/images/lo/location_map_17520603297910/mp_lvl_1-13/1_rss.png'
+           style='border: none' />
+    </a>
+  </noscript>
+  <object class='tableauViz' style='display:none;'>
+    <param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' />
+    <param name='embed_code_version' value='3' />
+    <param name='site_root' value='' />
+    <param name='name' value='location_map_17520603297910/mp_lvl_1-13' />
+    <param name='tabs' value='no' />
+    <param name='toolbar' value='yes' />
+    <param name='animate_transition' value='yes' />
+    <param name='display_static_image' value='yes' />
+    <param name='display_spinner' value='yes' />
+    <param name='display_overlay' value='yes' />
+    <param name='display_count' value='yes' />
+    <param name='language' value='en-US' />
+    <param name='filter' value='publish=yes' />
+  </object>
+</div>
 
 <script>
-  $(document).ready(function() {
-
-    // Функція для ініціалізації Tableau після отримання координат
-    function initTableauViz(lat, lon) {
+  $(document).ready(function () {
+    function updateAddressAndInitViz(lat, lon) {
       $("#address").text(`Ваші координати: широта ${lat.toFixed(4)}, довгота ${lon.toFixed(4)}`);
 
-      const containerDiv = document.getElementById("vizContainer");
-      const url = "https://public.tableau.com/views/experement_17519918234750/Sheet2";
+      // Ініціалізація візуалізації
+      const container = document.getElementById('viz1752060474290');
+      const vizObject = container.getElementsByTagName('object')[0];
+      vizObject.style.display = 'block';
+      vizObject.style.width = '100%';
+      vizObject.style.height = (container.offsetWidth * 0.75) + 'px';
 
-      const options = {
-        hideTabs: true,
-        hideToolbar: false,
-        onFirstInteractive: function () {
-          // Передаємо параметри Latitude та Longitude (потрібно щоб такі параметри були у Tableau)
-          viz.getWorkbook().changeParameterValueAsync("Latitude", lat.toString());
-          viz.getWorkbook().changeParameterValueAsync("Longitude", lon.toString());
-        }
+      // Завантаження Tableau візуалізації
+      const script = document.createElement('script');
+      script.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';
+      vizObject.parentNode.insertBefore(script, vizObject);
+
+      // Після завантаження API, встановлюємо параметри
+      script.onload = function () {
+        const viz = new tableau.Viz(container, "https://public.tableau.com/views/location_map_17520603297910/mp_lvl_1-13", {
+          hideTabs: true,
+          hideToolbar: false,
+          onFirstInteractive: function () {
+            viz.getWorkbook().changeParameterValueAsync("Latitude", lat.toString());
+            viz.getWorkbook().changeParameterValueAsync("Longitude", lon.toString());
+          }
+        });
       };
-
-      const viz = new tableau.Viz(containerDiv, url, options);
     }
 
-    // Отримуємо координати через HTML5 Geolocation API
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(function(position) {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-        initTableauViz(lat, lon);
-      }, function(error) {
-        $("#address").text("Не вдалося визначити координати користувача: " + error.message);
-      });
+      navigator.geolocation.getCurrentPosition(
+        function (position) {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          updateAddressAndInitViz(lat, lon);
+        },
+        function (error) {
+          $("#address").text("Не вдалося визначити координати користувача: " + error.message);
+        }
+      );
     } else {
       $("#address").text("Геолокація не підтримується вашим браузером.");
     }
-
   });
 </script>
 
