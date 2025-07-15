@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Tableau Dashboard</title>
-  <script type="text/javascript" src="https://public.tableau.com/javascripts/api/tableau-2.min.js"></script>
+  <script src="https://public.tableau.com/javascripts/api/tableau-2.min.js"></script>
   <style>
     body {
       margin: 0;
@@ -22,22 +22,49 @@
 <div id="vizContainer"></div>
 
 <script>
-  // Tableau вбудований дашборд
   const containerDiv = document.getElementById("vizContainer");
-
   const url = "https://public.tableau.com/views/location_map_17520603297910/Dashboard1";
 
-  const options = {
-    hideTabs: true,
-    hideToolbar: false,
-    width: "100%",
-    height: "850px",
-    onFirstInteractive: function () {
-      console.log("✅ Дашборд успішно завантажено");
-    }
-  };
+  let viz;
 
-  new tableau.Viz(containerDiv, url, options);
+  function initializeViz(lat, lon) {
+    const options = {
+      hideTabs: true,
+      hideToolbar: false,
+      width: "100%",
+      height: "850px",
+      onFirstInteractive: function () {
+        console.log("✅ Дашборд завантажено");
+
+        // Змінюємо параметри карти
+        viz.getWorkbook().changeParameterValueAsync("Map Center Latitude", lat.toFixed(6));
+        viz.getWorkbook().changeParameterValueAsync("Map Center Longitude", lon.toFixed(6));
+        viz.getWorkbook().changeParameterValueAsync("Map Zoom Level", "11"); // або будь-яке інше значення від 1 до ~16
+      }
+    };
+
+    viz = new tableau.Viz(containerDiv, url, options);
+  }
+
+  // Отримати координати користувача
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function (position) {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        console.log(`📍 Ваші координати: ${lat}, ${lon}`);
+        initializeViz(lat, lon);
+      },
+      function (error) {
+        console.error("❌ Помилка геолокації: ", error.message);
+        // Фолбек координат — центр Києва
+        initializeViz(50.4501, 30.5234);
+      }
+    );
+  } else {
+    console.warn("⚠️ Геолокація не підтримується. Використовується значення за замовчуванням.");
+    initializeViz(50.4501, 30.5234); // Центр Києва
+  }
 </script>
 
 </body>
