@@ -2,72 +2,42 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8" />
-  <title>Геолокаційний Tableau Дашборд</title>
-  <script src="https://code.jquery.com/jquery-3.1.0.js"></script>
-  <script src="https://public.tableau.com/javascripts/api/tableau-2.min.js"></script>
+  <title>Tableau Dashboard</title>
+  <script type="text/javascript" src="https://public.tableau.com/javascripts/api/tableau-2.min.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      overflow: hidden;
+      font-family: sans-serif;
     }
-
     #vizContainer {
-      width: 1240px;
-      height: 800px;
+      width: 100%;
+      height: 850px;
       margin: 0 auto;
-      border: none;
-    }
-
-    #address {
-      padding: 10px;
-      text-align: center;
     }
   </style>
 </head>
 <body>
 
-<div id="address">Визначення місцезнаходження...</div>
 <div id="vizContainer"></div>
 
 <script>
-  $(document).ready(function () {
-    function initTableauViz(lat, lon) {
-      $("#address").text(`Ваші координати: широта ${lat.toFixed(4)}, довгота ${lon.toFixed(4)}`);
+  // Tableau вбудований дашборд
+  const containerDiv = document.getElementById("vizContainer");
 
-      const containerDiv = document.getElementById("vizContainer");
-      const url = "https://public.tableau.com/views/location_map_17520603297910/Dashboard1?";
+  const url = "https://public.tableau.com/views/location_map_17520603297910/Dashboard1";
 
-      const options = {
-        width: "1240px",
-        height: "800px",
-        hideTabs: true,
-        hideToolbar: false,
-        onFirstInteractive: function () {
-          viz.getWorkbook().changeParameterValueAsync("Latitude", lat.toString());
-          viz.getWorkbook().changeParameterValueAsync("Longitude", lon.toString());
-        }
-      };
-
-      viz = new tableau.Viz(containerDiv, url, options);
+  const options = {
+    hideTabs: true,
+    hideToolbar: false,
+    width: "100%",
+    height: "850px",
+    onFirstInteractive: function () {
+      console.log("✅ Дашборд успішно завантажено");
     }
+  };
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        function (position) {
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
-          initTableauViz(lat, lon);
-        },
-        function (error) {
-          $("#address").text("Не вдалося визначити координати користувача: " + error.message);
-        }
-      );
-    } else {
-      $("#address").text("Геолокація не підтримується вашим браузером.");
-    }
-  });
+  new tableau.Viz(containerDiv, url, options);
 </script>
 
 </body>
