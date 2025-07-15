@@ -45,8 +45,13 @@
         hideTabs: true,
         hideToolbar: false,
         onFirstInteractive: function () {
-          viz.getWorkbook().changeParameterValueAsync("Latitude", lat.toString());
-          viz.getWorkbook().changeParameterValueAsync("Longitude", lon.toString());
+          try {
+            const workbook = viz.getWorkbook();
+            workbook.changeParameterValueAsync("Latitude", lat.toString());
+            workbook.changeParameterValueAsync("Longitude", lon.toString());
+          } catch (err) {
+            console.error("Не вдалося передати параметри геолокації:", err);
+          }
         }
       };
 
