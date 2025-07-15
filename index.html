@@ -37,7 +37,7 @@
       $("#address").text(`Ваші координати: широта ${lat.toFixed(4)}, довгота ${lon.toFixed(4)}`);
 
       const containerDiv = document.getElementById("vizContainer");
-      const url = "https://public.tableau.com/shared/Q9DWNDJ5K?:display_count=n&:origin=viz_share_link";
+      const url = "https://public.tableau.com/views/location_map_17520603297910/Sheet4?publish=yes";
 
       const options = {
         width: "1240px",
@@ -45,13 +45,8 @@
         hideTabs: true,
         hideToolbar: false,
         onFirstInteractive: function () {
-          try {
-            const workbook = viz.getWorkbook();
-            workbook.changeParameterValueAsync("Latitude", lat.toString());
-            workbook.changeParameterValueAsync("Longitude", lon.toString());
-          } catch (err) {
-            console.error("Не вдалося передати параметри геолокації:", err);
-          }
+          viz.getWorkbook().changeParameterValueAsync("Latitude", lat.toString());
+          viz.getWorkbook().changeParameterValueAsync("Longitude", lon.toString());
         }
       };
 
