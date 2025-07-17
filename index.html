@@ -37,6 +37,14 @@
       return coords && coords[0] === 0 && coords[1] === 0;
     }
 
+    async function setParamsAndRefresh(workbook, lat, lon) {
+      await workbook.changeParameterValueAsync("Latitude", lat.toString());
+      await workbook.changeParameterValueAsync("Longitude", lon.toString());
+      await workbook.changeParameterValueAsync("StartLat", lat.toString());
+      await workbook.changeParameterValueAsync("StartLon", lon.toString());
+      await workbook.refreshDataAsync();  // Оновлюємо візуалізацію
+    }
+
     function initTableauViz(lat, lon) {
       $("#address").text(`Ваші координати: широта ${lat.toFixed(4)}, довгота ${lon.toFixed(4)}`);
 
@@ -47,10 +55,8 @@
         hideTabs: true,
         hideToolbar: false,
         onFirstInteractive: function () {
-          viz.getWorkbook().changeParameterValueAsync("Latitude", lat.toString());
-          viz.getWorkbook().changeParameterValueAsync("Longitude", lon.toString());
-          viz.getWorkbook().changeParameterValueAsync("StartLat", lat.toString());
-          viz.getWorkbook().changeParameterValueAsync("StartLon", lon.toString());
+          const workbook = viz.getWorkbook();
+          setParamsAndRefresh(workbook, lat, lon);
         }
       };
 
@@ -70,7 +76,7 @@
           position => startViz(position.coords.latitude, position.coords.longitude),
           error => {
             $("#address").text("Не вдалося визначити координати користувача: " + error.message);
-            startViz(50, 30); // Запасні координати (Київ)
+            startViz(50.45, 30.52); // Запасні координати (Київ)
           }
         );
       } else {
