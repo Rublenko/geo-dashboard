@@ -43,8 +43,8 @@
           Promise.all([
             wb.changeParameterValueAsync("Latitude", lat.toString()),
             wb.changeParameterValueAsync("Longitude", lon.toString()),
-            wb.changeParameterValueAsync("EndLat", lat.toString()),
-            wb.changeParameterValueAsync("EndLon", lon.toString()),
+            //wb.changeParameterValueAsync("EndLat", lat.toString()),
+           // wb.changeParameterValueAsync("EndLon", lon.toString()),
             wb.changeParameterValueAsync("StartLat", lat.toString()),
             wb.changeParameterValueAsync("StartLon", lon.toString())
           ]).then(() => {
