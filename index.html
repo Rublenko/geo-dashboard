@@ -21,8 +21,22 @@
 
 <script>
   $(document).ready(function() {
+    function getParam(name) {
+      return new URLSearchParams(window.location.search).get(name);
+    }
 
-    // Функція для ініціалізації Tableau після отримання координат
+    function parseCoords(str) {
+      if (!str) return null;
+      const parts = str.split(',').map(Number);
+      if (parts.length !== 2) return null;
+      if (parts.some(isNaN)) return null;
+      return parts;
+    }
+
+    function isZeroCoords(coords) {
+      return coords && coords[0] === 0 && coords[1] === 0;
+    }
+
     function initTableauViz(lat, lon) {
       $("#address").text(`Ваші координати: широта ${lat.toFixed(4)}, довгота ${lon.toFixed(4)}`);
 
@@ -33,32 +47,41 @@
         hideTabs: true,
         hideToolbar: false,
         onFirstInteractive: function () {
-          // Передаємо параметри Latitude та Longitude (потрібно щоб такі параметри були у Tableau)
           viz.getWorkbook().changeParameterValueAsync("Latitude", lat.toString());
           viz.getWorkbook().changeParameterValueAsync("Longitude", lon.toString());
-           viz.getWorkbook().changeParameterValueAsync("StartLon", lon.toString());
-           viz.getWorkbook().changeParameterValueAsync("StartLat", lat.toString());
+          viz.getWorkbook().changeParameterValueAsync("StartLat", lat.toString());
+          viz.getWorkbook().changeParameterValueAsync("StartLon", lon.toString());
         }
       };
 
-      const viz = new tableau.Viz(containerDiv, url, options);
+      window.viz = new tableau.Viz(containerDiv, url, options);
     }
 
-    // Отримуємо координати через HTML5 Geolocation API
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(function(position) {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-        initTableauViz(lat, lon);
-      }, function(error) {
-        $("#address").text("Не вдалося визначити координати користувача: " + error.message);
-      });
+    function startViz(lat, lon) {
+      initTableauViz(lat, lon);
+    }
+
+    const fromParam = getParam('from');
+    let coords = parseCoords(fromParam);
+
+    if (!coords || isZeroCoords(coords)) {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          position => startViz(position.coords.latitude, position.coords.longitude),
+          error => {
+            $("#address").text("Не вдалося визначити координати користувача: " + error.message);
+            startViz(50, 30); // Запасні координати (Київ)
+          }
+        );
+      } else {
+        $("#address").text("Геолокація не підтримується вашим браузером.");
+        startViz(50.45, 30.52); // Запасні координати (Київ)
+      }
     } else {
-      $("#address").text("Геолокація не підтримується вашим браузером.");
+      startViz(coords[0], coords[1]);
     }
-
   });
 </script>
 
 </body>
-</html> 
+</html>
