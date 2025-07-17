@@ -70,12 +70,12 @@
           position => startViz(position.coords.latitude, position.coords.longitude),
           error => {
             $("#address").text("Не вдалося визначити координати: " + error.message);
-            startViz(50.45, 30.52); // Київ
+            startViz(0, 0); // Київ
           }
         );
       } else {
         $("#address").text("Геолокація не підтримується вашим браузером.");
-        startViz(50.45, 30.52); // Київ
+        startViz(0, 0); // Київ
       }
     } else {
       startViz(coords[0], coords[1]);
