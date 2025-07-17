@@ -13,7 +13,7 @@
 </head>
 <body>
 
-<h2>Геолокаційний Tableau Дашборд</h2>
+<h2>Геолокаційний дашборд</h2>
 <div id="address">Визначення місцезнаходження...</div>
 <hr/>
 
@@ -28,26 +28,17 @@
     function parseCoords(str) {
       if (!str) return null;
       const parts = str.split(',').map(Number);
-      if (parts.length !== 2) return null;
-      if (parts.some(isNaN)) return null;
-      return parts;
+      return parts.length === 2 && !parts.some(isNaN) ? parts : null;
     }
 
     function isZeroCoords(coords) {
-      return coords && coords[0] === 0 && coords[1] === 0;
+      return coords[0] === 0 && coords[1] === 0;
     }
 
-    async function setParamsAndRefresh(workbook, lat, lon) {
-      await workbook.changeParameterValueAsync("Latitude", lat.toString());
-      await workbook.changeParameterValueAsync("Longitude", lon.toString());
-      await workbook.changeParameterValueAsync("StartLat", lat.toString());
-      await workbook.changeParameterValueAsync("StartLon", lon.toString());
-
-      // Спробуємо оновити активний аркуш (лист)
-      const activeSheet = workbook.getActiveSheet();
-      if (activeSheet.refreshAsync) {
-        await activeSheet.refreshAsync();
-      }
+    function redirectWithCoords(lat, lon) {
+      const to = getParam("to") || "0,0";
+      const newUrl = `${window.location.pathname}?from=${lat.toFixed(6)},${lon.toFixed(6)}&to=${to}`;
+      window.location.href = newUrl;
     }
 
     function initTableauViz(lat, lon) {
@@ -60,36 +51,34 @@
         hideTabs: true,
         hideToolbar: false,
         onFirstInteractive: function () {
-          const workbook = viz.getWorkbook();
-          setParamsAndRefresh(workbook, lat, lon);
+          viz.getWorkbook().changeParameterValueAsync("Latitude", lat.toString());
+          viz.getWorkbook().changeParameterValueAsync("Longitude", lon.toString());
+          viz.getWorkbook().changeParameterValueAsync("StartLat", lat.toString());
+          viz.getWorkbook().changeParameterValueAsync("StartLon", lon.toString());
         }
       };
 
       window.viz = new tableau.Viz(containerDiv, url, options);
     }
 
-    function startViz(lat, lon) {
-      initTableauViz(lat, lon);
-    }
-
     const fromParam = getParam('from');
-    let coords = parseCoords(fromParam);
+    const fromCoords = parseCoords(fromParam);
 
-    if (!coords || isZeroCoords(coords)) {
+    if (!fromCoords || isZeroCoords(fromCoords)) {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-          position => startViz(position.coords.latitude, position.coords.longitude),
-          error => {
-            $("#address").text("Не вдалося визначити координати користувача: " + error.message);
-            startViz(50, 30); // Київ
+          pos => redirectWithCoords(pos.coords.latitude, pos.coords.longitude),
+          err => {
+            $("#address").text("Не вдалося визначити місцезнаходження. Завантажуємо Київ...");
+            initTableauViz(50.45, 30.52); // fallback: Київ
           }
         );
       } else {
-        $("#address").text("Геолокація не підтримується вашим браузером.");
-        startViz(50, 30); // Київ
+        $("#address").text("Ваш браузер не підтримує геолокацію.");
+        initTableauViz(50.45, 30.52); // fallback: Київ
       }
     } else {
-      startViz(coords[0], coords[1]);
+      initTableauViz(fromCoords[0], fromCoords[1]);
     }
   });
 </script>
