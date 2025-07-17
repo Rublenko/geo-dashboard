@@ -16,34 +16,21 @@
 <h2>Геолокаційний дашборд</h2>
 <div id="address">Визначення місцезнаходження...</div>
 <hr/>
-
 <div id="vizContainer"></div>
 
 <script>
-  $(document).ready(function() {
-    function getParam(name) {
-      return new URLSearchParams(window.location.search).get(name);
-    }
-
-    function parseCoords(str) {
+  $(document).ready(function () {
+    const getParam = name => new URLSearchParams(window.location.search).get(name);
+    const parseCoords = str => {
       if (!str) return null;
       const parts = str.split(',').map(Number);
-      return parts.length === 2 && !parts.some(isNaN) ? parts : null;
-    }
+      return parts.length === 2 && parts.every(n => !isNaN(n)) ? parts : null;
+    };
 
-    function isZeroCoords(coords) {
-      return coords[0] === 0 && coords[1] === 0;
-    }
-
-    function redirectWithCoords(lat, lon) {
-      const to = getParam("to") || "0,0";
-      const newUrl = `${window.location.pathname}?from=${lat.toFixed(6)},${lon.toFixed(6)}&to=${to}`;
-      window.location.href = newUrl;
-    }
+    const isZeroCoords = coords => coords && coords[0] === 0 && coords[1] === 0;
 
     function initTableauViz(lat, lon) {
       $("#address").text(`Ваші координати: широта ${lat.toFixed(4)}, довгота ${lon.toFixed(4)}`);
-
       const containerDiv = document.getElementById("vizContainer");
       const url = "https://public.tableau.com/views/location_map_17520603297910/Dashboard2";
 
@@ -51,34 +38,45 @@
         hideTabs: true,
         hideToolbar: false,
         onFirstInteractive: function () {
-          viz.getWorkbook().changeParameterValueAsync("Latitude", lat.toString());
-          viz.getWorkbook().changeParameterValueAsync("Longitude", lon.toString());
-          viz.getWorkbook().changeParameterValueAsync("StartLat", lat.toString());
-          viz.getWorkbook().changeParameterValueAsync("StartLon", lon.toString());
+          const wb = viz.getWorkbook();
+
+          Promise.all([
+            wb.changeParameterValueAsync("Latitude", lat.toString()),
+            wb.changeParameterValueAsync("Longitude", lon.toString()),
+            wb.changeParameterValueAsync("StartLat", lat.toString()),
+            wb.changeParameterValueAsync("StartLon", lon.toString())
+          ]).then(() => {
+            // Змінюємо технічний параметр, щоб примусити оновлення
+            return wb.changeParameterValueAsync("RefreshTrigger", Math.random().toString());
+          });
         }
       };
 
       window.viz = new tableau.Viz(containerDiv, url, options);
     }
 
-    const fromParam = getParam('from');
-    const fromCoords = parseCoords(fromParam);
+    function startViz(lat, lon) {
+      initTableauViz(lat, lon);
+    }
 
-    if (!fromCoords || isZeroCoords(fromCoords)) {
+    const fromParam = getParam('from');
+    const coords = parseCoords(fromParam);
+
+    if (!coords || isZeroCoords(coords)) {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-          pos => redirectWithCoords(pos.coords.latitude, pos.coords.longitude),
-          err => {
-            $("#address").text("Не вдалося визначити місцезнаходження. Завантажуємо Київ...");
-            initTableauViz(50.45, 30.52); // fallback: Київ
+          position => startViz(position.coords.latitude, position.coords.longitude),
+          error => {
+            $("#address").text("Не вдалося визначити координати: " + error.message);
+            startViz(50.45, 30.52); // Київ
           }
         );
       } else {
-        $("#address").text("Ваш браузер не підтримує геолокацію.");
-        initTableauViz(50.45, 30.52); // fallback: Київ
+        $("#address").text("Геолокація не підтримується вашим браузером.");
+        startViz(50.45, 30.52); // Київ
       }
     } else {
-      initTableauViz(fromCoords[0], fromCoords[1]);
+      startViz(coords[0], coords[1]);
     }
   });
 </script>
