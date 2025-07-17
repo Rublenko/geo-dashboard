@@ -36,6 +36,7 @@
           // Передаємо параметри Latitude та Longitude (потрібно щоб такі параметри були у Tableau)
           viz.getWorkbook().changeParameterValueAsync("Latitude", lat.toString());
           viz.getWorkbook().changeParameterValueAsync("Longitude", lon.toString());
+           viz.getWorkbook().changeParameterValueAsync("StartLon", lon);
         }
       };
 
